@@ -27,12 +27,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     authApi.me()
       .then(() => setIsValidating(false))
-      .catch(() => {
-        // Token is invalid (user not found, expired secret, etc.) — force re-login
-        logout();
-        router.push("/");
+      .catch((err) => {
+        // Only logout if explicit 401 unauthorized response from backend
+        if (err.response?.status === 401) {
+          logout();
+          router.push("/");
+        } else {
+          // Allow static hosting/offline fallback to remain authenticated
+          setIsValidating(false);
+        }
       });
-  }, [isHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isHydrated, token, user, logout, router]);
+
 
   if (!isHydrated || isValidating || !token || !user) return null;
 

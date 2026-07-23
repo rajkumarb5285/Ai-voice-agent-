@@ -43,15 +43,23 @@ export default function LandingPage() {
   }, [isHydrated, token, user, router]);
 
   const handleGoogleSignIn = async () => {
-
     setIsLoading(true);
     setError("");
     try {
       const userCred = await signInWithGoogle();
       const idToken = await userCred.user.getIdToken();
-      const res = await authApi.firebaseLogin(idToken);
-      const { access_token, user: userData } = res.data;
-      setAuth(userData, access_token);
+      let userData = {
+        id: userCred.user.uid,
+        email: userCred.user.email || "",
+        username: userCred.user.displayName || userCred.user.email?.split("@")[0] || "user",
+        full_name: userCred.user.displayName || "Google User",
+        created_at: new Date().toISOString(),
+      };
+      try {
+        const res = await authApi.firebaseLogin(idToken);
+        if (res.data?.user) userData = res.data.user;
+      } catch {}
+      setAuth(userData, idToken);
       router.push("/chat");
     } catch (err: any) {
       setError(err?.message || "Google Sign-In failed");
@@ -73,9 +81,19 @@ export default function LandingPage() {
         userCred = await signUpWithEmail(form.email, form.password, form.full_name, form.username);
       }
       const idToken = await userCred.user.getIdToken();
-      const res = await authApi.firebaseLogin(idToken);
-      const { access_token, user: userData } = res.data;
-      setAuth(userData, access_token);
+      let userData = {
+        id: userCred.user.uid,
+        email: userCred.user.email || form.email,
+        username: form.username || form.email.split("@")[0],
+        full_name: form.full_name || form.email.split("@")[0],
+        created_at: new Date().toISOString(),
+      };
+
+      try {
+        const res = await authApi.firebaseLogin(idToken);
+        if (res.data?.user) userData = res.data.user;
+      } catch {}
+      setAuth(userData, idToken);
       router.push("/chat");
     } catch (err: any) {
       // Fallback to local authentication if Firebase Auth or Backend API is offline
@@ -102,6 +120,7 @@ export default function LandingPage() {
       setIsLoading(false);
     }
   };
+
 
 
   if (!isHydrated) {
