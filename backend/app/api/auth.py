@@ -104,3 +104,31 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="User not found or inactive")
 
     return user
+
+
+class FirebaseLoginPayload(pydantic_schema_base_model if 'pydantic_schema_base_model' in globals() else object):
+    id_token: str
+
+@router.post("/firebase-login", response_model=Token)
+async def firebase_login(data: dict, db: AsyncSession = Depends(get_db)):
+    id_token = data.get("id_token")
+    if not id_token:
+        raise HTTPException(status_code=400, detail="Missing id_token")
+
+    try:
+        from app.firebase_config import verify_firebase_id_token
+        from fastapi.security import HTTPAuthorizationCredentials
+        decoded = await verify_firebase_id_token(HTTPAuthorizationCredentials(scheme="Bearer", credentials=id_token))
+        email = decoded.get("email") or f"{decoded.get('uid')}@firebase.user"
+        username = decoded.get("name") or decoded.get("uid") or email.split("@")[0]
+
+        user = await get_user_by_email(db, email)
+        if not user:
+            user = await create_user(db, email=email, username=username[:20], password=id_token[:16], full_name=decoded.get("name", "Firebase User"))
+        
+        token = create_access_token({"sub": str(user.id)})
+        return Token(access_token=token, token_type="bearer", user=UserResponse.model_validate(user))
+    except Exception as e:
+        logger.error("firebase_login_error", error=str(e))
+        raise HTTPException(status_code=401, detail=f"Firebase login failed: {str(e)}")
+

@@ -27,6 +27,8 @@ chromadb==0.5.23
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.1
+firebase-admin==6.5.0
+
 
 # Settings
 pydantic==2.10.3
