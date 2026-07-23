@@ -146,7 +146,27 @@ async def response_synthesis_node(state: AgentState) -> AgentState:
 
     logger.info("response_synthesis_start", num_agent_outputs=len(agent_outputs))
 
+    # FAST PATH: If media_agent produced output, preserve exact image/video URLs without LLM rewriting
+    if "media_agent" in agent_outputs:
+        media_output = agent_outputs["media_agent"]
+        latency = int((time.time() - start) * 1000)
+        activity = {
+            "agent_name": "Response Synthesizer",
+            "action": "Passed through Media Agent output (Image/Video)",
+            "status": "completed",
+            "output_summary": media_output[:150],
+            "duration_ms": latency,
+        }
+        return {
+            **state,
+            "final_response": media_output,
+            "memories_to_store": state.get("memories_to_store", []),
+            "agent_activities": state.get("agent_activities", []) + [activity],
+            "total_latency_ms": state.get("total_latency_ms", 0) + latency,
+        }
+
     # FAST PATH: If only orchestrator produced output, or if we are in voice mode with a single agent output AND language is English, skip synthesis
+
     is_orchestrator_only = len(agent_outputs) == 1 and "orchestrator" in agent_outputs
     is_voice_english_single = len(agent_outputs) == 1 and input_mode == "voice" and (not language or language == "en-US")
     if is_orchestrator_only or is_voice_english_single:

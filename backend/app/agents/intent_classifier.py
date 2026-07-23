@@ -34,11 +34,14 @@ Intent categories:
 - career: resume, interview prep, job search, skill gaps
 - email: read/write/summarize emails
 - analysis: analyze data, files, charts
+- media_generation: generate images, pictures, photos, draw, create videos, animations
 - memory: remember this, what did I say, recall
 
 Agent mapping:
 - general_chat → ["orchestrator"]
+- media_generation → ["media_agent"]
 - research → ["research_agent"]
+
 - coding → ["coding_agent"]
 - planning → ["planner_agent"]
 - productivity → ["productivity_agent"]
@@ -126,6 +129,7 @@ def is_casual_conversation(text: str) -> bool:
         return True
         
     specialist_keywords = [
+        "image", "video", "photo", "picture", "draw", "animate", "generate", "create video",
         "search", "google", "weather", "news", "find", "research", "browse",
         "code", "python", "javascript", "program", "function", "bug", "compile", "script",
         "plan", "goal", "breakdown", "todo", "steps", "tasks", "milestones",
@@ -136,6 +140,7 @@ def is_casual_conversation(text: str) -> bool:
         "email", "mail", "inbox", "gmail", "draft",
         "remember", "forget", "recall", "memory", "store"
     ]
+
     
     words = clean.split()
     if len(words) <= 3 and not any(kw in clean for kw in specialist_keywords):
