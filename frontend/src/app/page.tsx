@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Sparkles, Mic, Brain, Zap, User, Mail, Lock } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAppStore } from "@/store/useAppStore";
+import { signInWithEmail, signUpWithEmail, signInWithGoogle } from "@/lib/firebase";
+
 
 const features = [
   { icon: Mic, title: "Voice-First Interaction", desc: "Ultra-low latency natural voice conversations" },
@@ -40,33 +42,67 @@ export default function LandingPage() {
     }
   }, [isHydrated, token, user, router]);
 
+  const handleGoogleSignIn = async () => {
+
+    setIsLoading(true);
+    setError("");
+    try {
+      const userCred = await signInWithGoogle();
+      const idToken = await userCred.user.getIdToken();
+      const res = await authApi.firebaseLogin(idToken);
+      const { access_token, user: userData } = res.data;
+      setAuth(userData, access_token);
+      router.push("/chat");
+    } catch (err: any) {
+      setError(err?.message || "Google Sign-In failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      let res;
+      let userCred;
       if (isLogin) {
-        res = await authApi.login({ email: form.email, password: form.password });
+        userCred = await signInWithEmail(form.email, form.password);
       } else {
-        res = await authApi.register({
-          email: form.email,
-          username: form.username,
-          password: form.password,
-          full_name: form.full_name,
-        });
+        userCred = await signUpWithEmail(form.email, form.password, form.full_name, form.username);
       }
+      const idToken = await userCred.user.getIdToken();
+      const res = await authApi.firebaseLogin(idToken);
       const { access_token, user: userData } = res.data;
       setAuth(userData, access_token);
       router.push("/chat");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Something went wrong";
-      setError(Array.isArray(msg) ? msg[0]?.msg || "Error" : msg);
+    } catch (err: any) {
+      // Fallback to local authentication if Firebase Auth or Backend API is offline
+      try {
+        let res;
+        if (isLogin) {
+          res = await authApi.login({ email: form.email, password: form.password });
+        } else {
+          res = await authApi.register({
+            email: form.email,
+            username: form.username,
+            password: form.password,
+            full_name: form.full_name,
+          });
+        }
+        const { access_token, user: userData } = res.data;
+        setAuth(userData, access_token);
+        router.push("/chat");
+      } catch (fallbackErr: any) {
+        const msg = fallbackErr?.response?.data?.detail || err?.message || "Authentication failed";
+        setError(Array.isArray(msg) ? msg[0]?.msg || "Error" : msg);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
 
   if (!isHydrated) {
     return (

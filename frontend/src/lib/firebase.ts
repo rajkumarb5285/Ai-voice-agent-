@@ -27,20 +27,61 @@ export const auth = getAuth(app);
 export const database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
 
+// Realtime Auth Storage Helpers
+export function saveUserAuthDetailsToRealtimeDB(user: FirebaseUser, extraData?: Record<string, any>) {
+  if (!database || !user) return;
+  const userRef = ref(database, `users/${user.uid}`);
+  set(userRef, {
+    uid: user.uid,
+    email: user.email || "",
+    displayName: user.displayName || extraData?.displayName || user.email?.split("@")[0] || "User",
+    photoURL: user.photoURL || "",
+    emailVerified: user.emailVerified || false,
+    lastLoginAt: Date.now(),
+    status: "online",
+    ...extraData,
+  });
+}
+
+export function subscribeUserAuthRealtimeDB(uid: string, callback: (userData: any) => void) {
+  if (!database || !uid) return () => {};
+  const userRef = ref(database, `users/${uid}`);
+  onValue(userRef, (snapshot) => {
+    callback(snapshot.val());
+  });
+  return () => off(userRef);
+}
+
 // Auth Helpers
-export async function signUpWithEmail(email: string, pass: string) {
-  return await createUserWithEmailAndPassword(auth, email, pass);
+export async function signUpWithEmail(email: string, pass: string, full_name?: string, username?: string) {
+  const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+  if (userCred.user) {
+    saveUserAuthDetailsToRealtimeDB(userCred.user, { displayName: full_name || username || email.split("@")[0], username });
+  }
+  return userCred;
 }
 
 export async function signInWithEmail(email: string, pass: string) {
-  return await signInWithEmailAndPassword(auth, email, pass);
+  const userCred = await signInWithEmailAndPassword(auth, email, pass);
+  if (userCred.user) {
+    saveUserAuthDetailsToRealtimeDB(userCred.user);
+  }
+  return userCred;
 }
 
 export async function signInWithGoogle() {
-  return await signInWithPopup(auth, googleProvider);
+  const userCred = await signInWithPopup(auth, googleProvider);
+  if (userCred.user) {
+    saveUserAuthDetailsToRealtimeDB(userCred.user);
+  }
+  return userCred;
 }
 
 export async function signOutFirebase() {
+  if (auth.currentUser && database) {
+    const userRef = ref(database, `users/${auth.currentUser.uid}/status`);
+    set(userRef, "offline");
+  }
   return await firebaseSignOut(auth);
 }
 
@@ -66,3 +107,4 @@ export function subscribeRealtimeMessages(conversationId: string, callback: (mes
   });
   return () => off(messagesRef);
 }
+

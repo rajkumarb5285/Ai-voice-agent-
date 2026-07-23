@@ -37,8 +37,11 @@ export const authApi = {
     api.post("/api/auth/register", data),
   login: (data: { email: string; password: string }) =>
     api.post("/api/auth/login", data),
+  firebaseLogin: (id_token: string) =>
+    api.post("/api/auth/firebase-login", { id_token }),
   me: () => api.get("/api/auth/me"),
 };
+
 
 // ─── Chat ────────────────────────────────────────────────────────────────────
 export const chatApi = {
