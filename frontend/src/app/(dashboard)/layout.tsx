@@ -25,19 +25,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/");
       return;
     }
-    authApi.me()
-      .then(() => setIsValidating(false))
-      .catch((err) => {
-        // Only logout if explicit 401 unauthorized response from backend
-        if (err.response?.status === 401) {
-          logout();
-          router.push("/");
-        } else {
-          // Allow static hosting/offline fallback to remain authenticated
-          setIsValidating(false);
-        }
-      });
+    // Allow instant rendering of /chat
+    setIsValidating(false);
+
+    // Validate in background without blocking redirection
+    authApi.me().catch((err) => {
+      if (err.response?.status === 401) {
+        logout();
+        router.push("/");
+      }
+    });
   }, [isHydrated, token, user, logout, router]);
+
 
 
   if (!isHydrated || isValidating || !token || !user) return null;
