@@ -1,10 +1,11 @@
 "use client";
 import { useState, useRef, KeyboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, Square, Loader2, MicOff } from "lucide-react";
+import { Mic, Send, Square, Loader2, MicOff, Paperclip } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { voiceApi } from "@/lib/api";
+import { voiceApi, uploadApi } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface InputBarProps {
   onSendMessage: (message: string, mode?: string) => void;
@@ -15,9 +16,32 @@ interface InputBarProps {
 export function InputBar({ onSendMessage, isStreaming, isConnected }: InputBarProps) {
   const [input, setInput] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { voiceState, mode } = useAppStore();
   const { isRecording, startRecording, stopRecording, audioLevel, detectedLang, error: recError } = useVoiceRecorder();
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const res = await uploadApi.uploadFile(file);
+      const fileData = res.data;
+      const fileTag = fileData.file_type === "image"
+        ? `![${fileData.filename}](${fileData.url})\n`
+        : `[Attachment: ${fileData.filename}](${fileData.url})\n`;
+      setInput((prev) => prev + (prev ? "\n" : "") + fileTag);
+      toast.success(`Attached ${fileData.filename}`);
+    } catch {
+      toast.error("File upload failed");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
 
 
   const canSend = input.trim().length > 0 && !isStreaming && isConnected;
@@ -108,7 +132,31 @@ export function InputBar({ onSendMessage, isStreaming, isConnected }: InputBarPr
 
       {/* Main input row */}
       <div className="flex items-end gap-2">
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          className="hidden"
+          accept="image/*,video/*,audio/*,.pdf,.txt,.py,.js,.ts,.json"
+        />
+        <motion.button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading || isStreaming}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.92 }}
+          className="p-3 rounded-xl bg-surface-3 text-white/70 hover:text-white hover:bg-surface-4 border border-surface-border transition-all disabled:opacity-40"
+          title="Upload file or image"
+        >
+          {isUploading ? (
+            <Loader2 className="w-5 h-5 animate-spin text-brand-400" />
+          ) : (
+            <Paperclip className="w-5 h-5" />
+          )}
+        </motion.button>
+
         {/* Text input */}
+
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}

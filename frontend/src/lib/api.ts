@@ -94,3 +94,15 @@ export const tasksApi = {
   delete: (id: string) => api.delete(`/api/tasks/${id}`),
   summary: () => api.get("/api/tasks/summary"),
 };
+
+// ─── Upload ──────────────────────────────────────────────────────────────────
+export const uploadApi = {
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post("/api/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+};
+

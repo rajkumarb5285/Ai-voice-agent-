@@ -61,9 +61,40 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast }: Me
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div className="prose prose-invert prose-sm max-w-none">
+            {/* Custom Video Renderer */}
+            {message.content.includes("[video:") && (
+              <div className="my-3">
+                {message.content.match(/\[video:(.*?)\]/g)?.map((match, idx) => {
+                  const videoUrl = match.replace("[video:", "").replace("]", "");
+                  return (
+                    <div key={idx} className="relative rounded-2xl overflow-hidden border border-brand-500/30 shadow-2xl bg-black/60 my-2">
+                      <video
+                        src={videoUrl}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full max-h-80 object-contain rounded-xl"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
+                img({ node, src, alt, ...props }) {
+                  return (
+                    <img
+                      src={src}
+                      alt={alt || "AI Media"}
+                      className="rounded-2xl max-h-96 w-full object-cover border border-white/10 shadow-xl my-2"
+                      {...props}
+                    />
+                  );
+                },
                 code({ node, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "");
                   return match ? (
@@ -110,7 +141,7 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast }: Me
                 ),
               }}
             >
-              {message.content}
+              {message.content.replace(/\[video:.*?\]/g, "")}
             </ReactMarkdown>
             {/* Streaming cursor */}
             <span
@@ -119,6 +150,7 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast }: Me
             />
           </div>
         )}
+
 
         {/* Timestamp */}
         {message.created_at && (

@@ -1,7 +1,7 @@
-\"\"\"
+"""
 Email Tool
 Supports local database-backed email logs, SMTP sending, and Google Gmail API placeholders.
-\"\"\"
+"""
 import uuid
 import smtplib
 from email.mime.text import MIMEText
@@ -15,26 +15,19 @@ from app.config import settings
 from app.utils.logger import logger
 
 class EmailTool:
-    \"\"\"
+    """
     Manages email drafting, sending, and mock retrieval.
     Offers SMTP sending when credentials are provided in settings/env.
     Includes Gmail OAuth integration placeholders.
-    \"\"\"
+    """
 
     def __init__(self, db: AsyncSession, user_id: uuid.UUID):
         self.db = db
         self.user_id = user_id
 
     async def list_emails(self, folder: str = "inbox") -> List[Dict[str, Any]]:
-        \"\"\"Lists incoming or sent emails.\"\"\"
+        """Lists incoming or sent emails."""
         try:
-            # --- Google Gmail API Sync Placeholder ---
-            # if settings.google_client_id and settings.google_client_secret:
-            #     # TODO: Connect to Gmail API: service = build('gmail', 'v1', credentials=creds)
-            #     # messages = service.users().messages().list(userId='me', q=folder).execute()
-            #     # return messages.get('messages', [])
-            #     pass
-
             if folder == "sent":
                 stmt = select(EmailLog).where(EmailLog.user_id == self.user_id).order_by(EmailLog.sent_at.desc())
                 result = await self.db.execute(stmt)
@@ -79,7 +72,7 @@ class EmailTool:
         body: str,
         draft: bool = False
     ) -> Dict[str, Any]:
-        \"\"\"Sends an email or saves it as a draft.\"\"\"
+        """Sends an email or saves it as a draft."""
         try:
             status = "draft" if draft else "sent"
             
@@ -102,9 +95,6 @@ class EmailTool:
                     "email_id": str(log.id)
                 }
 
-            # Attempt real SMTP sending if config values exist (using environment fallbacks)
-            smtp_host = settings.secret_key  # placeholder lookup or similar
-            # For this agent system, if a user configures standard SMTP envs, we use them
             import os
             smtp_server = os.getenv("SMTP_SERVER")
             smtp_port = os.getenv("SMTP_PORT")
@@ -119,7 +109,6 @@ class EmailTool:
                     msg['Subject'] = subject
                     msg.attach(MIMEText(body, 'plain'))
 
-                    # Run sync SMTP call in executor or standard asyncio thread pool
                     import asyncio
                     def sync_send():
                         with smtplib.SMTP(smtp_server, int(smtp_port)) as server:
@@ -144,7 +133,6 @@ class EmailTool:
                         "email_id": str(log.id)
                     }
 
-            # If no SMTP setup, we perform a successful mock send
             logger.info("mock_email_sent", to=to_address, subject=subject)
             return {
                 "status": "success",

@@ -44,7 +44,9 @@ from app.agents.productivity_agent import productivity_agent_node
 from app.agents.wellness_agent import wellness_agent_node
 from app.agents.career_agent import career_agent_node
 from app.agents.email_agent import email_agent_node
+from app.agents.media_agent import media_agent_node
 from app.agents.response_agent import response_synthesis_node
+
 from app.config import settings
 from app.utils.logger import logger
 
@@ -308,7 +310,9 @@ async def parallel_agents_node(state: AgentState, db=None) -> AgentState:
         "wellness_agent": wellness_agent_node,
         "career_agent": career_agent_node,
         "email_agent": email_agent_node,
+        "media_agent": media_agent_node,
     }
+
 
     # Run selected agents in parallel
     tasks = []

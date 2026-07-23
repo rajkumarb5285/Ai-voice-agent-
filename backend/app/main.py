@@ -397,12 +397,15 @@ if settings.openai_api_key.startswith("mock-key") or "mock-key" in settings.open
 from app.database import create_tables
 from app.redis_client import get_redis, close_redis
 from app.utils.logger import setup_logging, logger
+from fastapi.staticfiles import StaticFiles
 from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
 from app.api.voice import router as voice_router
 from app.api.memory import router as memory_router
 from app.api.tasks import router as tasks_router
+from app.api.upload import router as upload_router
+
 
 
 @asynccontextmanager
@@ -531,6 +534,12 @@ app.include_router(chat_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")
+app.include_router(upload_router)
+
+uploads_dir = os.path.join(os.getcwd(), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
 
 
 if __name__ == "__main__":

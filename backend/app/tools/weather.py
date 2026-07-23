@@ -1,16 +1,16 @@
-\"\"\"
+"""
 Weather Tool
 Retrieves weather data from Open-Meteo (free, no API key required) or OpenWeatherMap.
-\"\"\"
+"""
 import httpx
 from app.config import settings
 from app.utils.logger import logger
 
 async def get_weather(location: str) -> str:
-    \"\"\"
+    """
     Gets current weather for a location (e.g., 'San Francisco' or 'London, UK').
     Attempts Open-Meteo (free) or falls back/uses OpenWeatherMap if configured.
-    \"\"\"
+    """
     # If OpenWeatherMap API key is provided, we can use it, but Open-Meteo is a great, free alternative
     if settings.openweather_api_key:
         try:

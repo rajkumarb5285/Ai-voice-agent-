@@ -1,7 +1,8 @@
-\"\"\"
+"""
 Calculator Tool
 Safely evaluates mathematical expressions.
-\"\"\"
+"""
+
 import ast
 import operator
 import math
@@ -76,7 +77,8 @@ class SafeEvaluator:
 
 
 def calculate(expression: str) -> str:
-    \"\"\"Safe evaluation of mathematical expression.\"\"\"
+    """Safe evaluation of mathematical expression."""
+
     evaluator = SafeEvaluator()
     try:
         res = evaluator.eval(expression)

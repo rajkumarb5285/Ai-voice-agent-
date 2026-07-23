@@ -67,8 +67,11 @@ def classify_intent_by_keywords(text: str) -> dict:
     text = text.lower()
     matched_intents = []
     
+    if any(k in text for k in ["image", "picture", "photo", "draw", "video", "generate image", "create video", "animate", "movie"]):
+        matched_intents.append(("media_generation", "media_agent"))
     if any(k in text for k in ["search", "google", "weather", "news", "find", "research", "browse"]):
         matched_intents.append(("research", "research_agent"))
+
     if any(k in text for k in ["code", "python", "javascript", "program", "function", "bug", "compile", "script", "developer", "html", "css"]):
         matched_intents.append(("coding", "coding_agent"))
     if any(k in text for k in ["plan", "goal", "breakdown", "todo", "steps", "tasks", "milestones"]):

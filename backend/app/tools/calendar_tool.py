@@ -1,7 +1,7 @@
-\"\"\"
+"""
 Calendar Tool
 Integrates with local PostgreSQL calendar events and provides a Google Calendar OAuth boilerplate.
-\"\"\"
+"""
 import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -11,34 +11,20 @@ from app.models.calendar_event import CalendarEvent
 from app.config import settings
 from app.utils.logger import logger
 
-# Google Calendar API Imports (Placeholder for integration)
-# from googleapiclient.discovery import build
-# from google.oauth2.credentials import Credentials
-
 class CalendarTool:
-    \"\"\"
+    """
     Manages calendar events.
     Supports local DB-backed calendar for out-of-the-box usage.
     Provides scaffolding/TODOs for Google Calendar sync.
-    \"\"\"
+    """
     
     def __init__(self, db: AsyncSession, user_id: uuid.UUID):
         self.db = db
         self.user_id = user_id
 
     async def list_events(self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None) -> List[Dict[str, Any]]:
-        \"\"\"Lists calendar events within a time range.\"\"\"
+        """Lists calendar events within a time range."""
         try:
-            # --- Google Calendar Sync Placeholder ---
-            # if settings.google_client_id and settings.google_client_secret:
-            #     # TODO: Fetch access token from user credentials/profile in DB
-            #     # creds = Credentials(token=access_token, refresh_token=refresh_token, client_id=settings.google_client_id, client_secret=settings.google_client_secret)
-            #     # service = build('calendar', 'v3', credentials=creds)
-            #     # gcal_events = service.events().list(calendarId='primary', timeMin=start_time.isoformat() + 'Z').execute()
-            #     # return gcal_events.get('items', [])
-            #     pass
-
-            # Local DB Fallback (Always active)
             stmt = select(CalendarEvent).where(CalendarEvent.user_id == self.user_id)
             if start_time:
                 stmt = stmt.where(CalendarEvent.start_time >= start_time)
@@ -76,9 +62,8 @@ class CalendarTool:
         location: Optional[str] = None,
         is_all_day: bool = False
     ) -> Dict[str, Any]:
-        \"\"\"Creates a new calendar event.\"\"\"
+        """Creates a new calendar event."""
         try:
-            # Local DB creation
             event = CalendarEvent(
                 user_id=self.user_id,
                 title=title,
@@ -91,15 +76,6 @@ class CalendarTool:
             self.db.add(event)
             await self.db.commit()
             await self.db.refresh(event)
-
-            # --- Google Calendar Sync Placeholder ---
-            # if settings.google_client_id and settings.google_client_secret:
-            #     # TODO: Authenticate service & insert event
-            #     # gcal_event = { 'summary': title, 'description': description, ... }
-            #     # created = service.events().insert(calendarId='primary', body=gcal_event).execute()
-            #     # event.gcal_event_id = created['id']
-            #     # await self.db.commit()
-            #     pass
 
             logger.info("calendar_event_created", event_id=event.id, title=title)
             return {
@@ -117,7 +93,7 @@ class CalendarTool:
             return {"status": "error", "message": f"Failed to create event: {str(e)}"}
 
     async def delete_event(self, event_id_str: str) -> Dict[str, Any]:
-        \"\"\"Deletes an event from the calendar.\"\"\"
+        """Deletes an event from the calendar."""
         try:
             event_id = uuid.UUID(event_id_str)
             stmt = select(CalendarEvent).where(
@@ -128,11 +104,6 @@ class CalendarTool:
 
             if not event:
                 return {"status": "error", "message": "Event not found."}
-
-            # --- Google Calendar Delete Placeholder ---
-            # if event.gcal_event_id and settings.google_client_id:
-            #     # TODO: Delete from GCal: service.events().delete(calendarId='primary', eventId=event.gcal_event_id).execute()
-            #     pass
 
             await self.db.delete(event)
             await self.db.commit()
