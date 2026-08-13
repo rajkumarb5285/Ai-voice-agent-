@@ -9,6 +9,7 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
+        "extra": "ignore",
     }
 
     # App
@@ -20,6 +21,7 @@ class Settings(BaseSettings):
 
     # LLM & Agent
     openai_api_key: str = ""
+    groq_api_key: str = ""
     agent_api_key: str = ""
     openai_base_url: str = ""
     llm_model: str = "gpt-4o-mini"        # Fast + cheap; use gpt-4o for higher quality
