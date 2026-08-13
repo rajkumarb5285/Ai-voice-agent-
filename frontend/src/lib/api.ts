@@ -106,3 +106,15 @@ export const uploadApi = {
   },
 };
 
+// ─── Realtime Database ───────────────────────────────────────────────────────
+export const realtimeApi = {
+  syncAuth: (data: { uid: string; email: string; display_name?: string; photo_url?: string; status?: string; extra?: Record<string, any> }) =>
+    api.post("/api/realtime/sync-auth", data),
+  getUser: (uid: string) => api.get(`/api/realtime/user/${uid}`),
+  setPresence: (uid: string, status: string) => api.post("/api/realtime/presence", { uid, status }),
+  saveSession: (sessionId: string, data: Record<string, any>) => api.post(`/api/realtime/session/${sessionId}`, { session_id: sessionId, data }),
+  getSession: (sessionId: string) => api.get(`/api/realtime/session/${sessionId}`),
+  pushEvent: (channel: string, event_data: Record<string, any>) => api.post("/api/realtime/events/push", { channel, event_data }),
+};
+
+

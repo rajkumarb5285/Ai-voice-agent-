@@ -108,3 +108,23 @@ export function subscribeRealtimeMessages(conversationId: string, callback: (mes
   return () => off(messagesRef);
 }
 
+export function syncRealtimeSessionData(sessionId: string, data: Record<string, any>) {
+  if (!database || !sessionId) return;
+  const sessionRef = ref(database, `realtime_data/sessions/${sessionId}`);
+  set(sessionRef, {
+    sessionId,
+    updatedAt: Date.now(),
+    ...data,
+  });
+}
+
+export function subscribeRealtimeSessionData(sessionId: string, callback: (data: any) => void) {
+  if (!database || !sessionId) return () => {};
+  const sessionRef = ref(database, `realtime_data/sessions/${sessionId}`);
+  onValue(sessionRef, (snapshot) => {
+    callback(snapshot.val());
+  });
+  return () => off(sessionRef);
+}
+
+

@@ -38,6 +38,17 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
             password=data.password,
             full_name=data.full_name,
         )
+        # Sync to Realtime DB
+        try:
+            from app.realtime_db import save_user_auth_realtime
+            save_user_auth_realtime(
+                uid=str(user.id),
+                email=user.email,
+                display_name=user.full_name or user.username,
+                status="online"
+            )
+        except Exception:
+            pass
     except Exception as err:
         await db.rollback()
         logger.error("registration_failed", error=str(err))
@@ -66,6 +77,18 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
     # Update last_seen
     user.last_seen_at = datetime.utcnow()
     await db.commit()
+
+    # Sync to Realtime DB
+    try:
+        from app.realtime_db import save_user_auth_realtime
+        save_user_auth_realtime(
+            uid=str(user.id),
+            email=user.email,
+            display_name=user.full_name or user.username,
+            status="online"
+        )
+    except Exception:
+        pass
 
     token = create_access_token({"sub": str(user.id)})
     return Token(

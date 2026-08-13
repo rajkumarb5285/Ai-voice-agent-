@@ -16,17 +16,18 @@ def init_firebase():
     if _firebase_app:
         return _firebase_app
 
+    db_url = os.getenv("FIREBASE_DATABASE_URL", "https://ai-voice-agent-app-default-rtdb.firebaseio.com")
     cred_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "")
     if cred_path and os.path.exists(cred_path):
         cred = credentials.Certificate(cred_path)
-        _firebase_app = firebase_admin.initialize_app(cred)
-        logger.info("firebase_admin_initialized", method="service_account_file")
+        _firebase_app = firebase_admin.initialize_app(cred, {"databaseURL": db_url})
+        logger.info("firebase_admin_initialized", method="service_account_file", database_url=db_url)
     else:
         # Initialize with default/environment configuration
         project_id = os.getenv("FIREBASE_PROJECT_ID", "ai-voice-agent-app")
         try:
-            _firebase_app = firebase_admin.initialize_app(options={"projectId": project_id})
-            logger.info("firebase_admin_initialized", method="default_project", project_id=project_id)
+            _firebase_app = firebase_admin.initialize_app(options={"projectId": project_id, "databaseURL": db_url})
+            logger.info("firebase_admin_initialized", method="default_project", project_id=project_id, database_url=db_url)
         except Exception as e:
             logger.warning("firebase_admin_init_fallback", error=str(e))
             _firebase_app = None
