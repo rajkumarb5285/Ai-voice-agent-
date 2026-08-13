@@ -406,6 +406,7 @@ from app.api.memory import router as memory_router
 from app.api.tasks import router as tasks_router
 from app.api.upload import router as upload_router
 from app.api.realtime import router as realtime_router
+from app.api.bhojpuri import router as bhojpuri_router
 
 
 
@@ -536,6 +537,7 @@ app.include_router(voice_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")
 app.include_router(realtime_router, prefix="/api")
+app.include_router(bhojpuri_router, prefix="/api")
 app.include_router(upload_router)
 
 uploads_dir = os.path.join(os.getcwd(), "uploads")

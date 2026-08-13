@@ -59,7 +59,7 @@ class STTService:
             audio_file = io.BytesIO(audio_bytes)
             audio_file.name = filename
 
-            stt_prompt = "यह शुद्ध अवधी, भोजपुरी और हिंदी बोली की रिकॉर्डिंग है। अवधी व भोजपुरी शब्द: अहै, अही, तोहार, करब, अउर, भवा, नीक, बा, बानी, राउर, का हाल अहै।"
+            stt_prompt = "यह शुद्ध भोजपुरी बोली की रिकॉर्डिंग है। भोजपुरी शब्द: रउआ, रउरा, कइसन, कहाँ, कइसहीं, बानी, बा, बाटे, रहल, जातानी, आवतानी, नइखे, चाहीं, होई, भइल, का हाल बा।"
             base_url = str(getattr(self.openai, "base_url", "")).lower()
             model_name = "whisper-large-v3-turbo" if "groq" in base_url else "whisper-1"
 

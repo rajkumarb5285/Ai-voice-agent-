@@ -166,9 +166,18 @@ class TTSService:
         voice: Optional[str] = None,
         speed: float = 1.0,
     ) -> bytes:
-        """Convert text to audio bytes (MP3)."""
+        """Convert text to audio bytes (MP3) with Bhojpuri text normalization and pronunciation dictionary corrections."""
         if not text.strip():
             return b""
+
+        # Bhojpuri Normalization & Phonetic Dictionary Correction Pipeline
+        try:
+            from app.services.bhojpuri_normalizer import bhojpuri_normalizer
+            from app.services.bhojpuri_dictionary import bhojpuri_dictionary
+            normalized_text = bhojpuri_normalizer.normalize(text)
+            text = bhojpuri_dictionary.apply_phonetic_corrections(normalized_text)
+        except Exception as norm_err:
+            logger.warning("bhojpuri_normalization_pipeline_warning", error=str(norm_err))
 
         # Primary: High-Definition Regional Sweet Female Voice via Edge TTS
         try:
