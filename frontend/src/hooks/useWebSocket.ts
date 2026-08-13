@@ -257,19 +257,12 @@ export function useWebSocket(): UseWebSocketReturn {
     ttsSpeakingRef.current = true;
     setVoiceState("speaking");
 
-    // Dynamically choose between native SpeechSynthesis (only for English) or Cloud TTS fallback (for regional languages)
-    if (currentLang.lang === "en-US" && hasNativeVoice(currentLang.lang)) {
-      speakOne(next, currentLang.lang, () => {
-        ttsSpeakingRef.current = false;
-        drainQueue();
-      });
-    } else {
-      speakOneCloud(next, currentLang.lang, () => {
-        ttsSpeakingRef.current = false;
-        drainQueue();
-      });
-    }
-  }, [speakOne, speakOneCloud, hasNativeVoice, setVoiceState, currentLang]);
+    // Use High-Definition Cloud TTS Voice Synthesis for rich, natural human audio playback
+    speakOneCloud(next, currentLang.lang, () => {
+      ttsSpeakingRef.current = false;
+      drainQueue();
+    });
+  }, [speakOneCloud, setVoiceState, currentLang]);
 
   // ── Enqueue sentences and start speaking immediately (≈ 0.2s latency)
   const enqueueTTS = useCallback((text: string) => {

@@ -107,10 +107,7 @@ class TTSService:
                 os.remove(tmp_path)
 
     async def _synthesize_google_fallback(self, text: str) -> bytes:
-        """Fallback Google Translate TTS for regional languages."""
-        import httpx
-        from urllib.parse import quote
-
+        """Fallback Google Translate TTS for regional languages using gTTS."""
         clean_text = self._clean_text_for_speech(text)
         if not clean_text:
             clean_text = text
@@ -138,6 +135,22 @@ class TTSService:
         elif any(ord(c) >= 0x0D00 and ord(c) <= 0x0D7F for c in clean_text):
             lang = "ml"
 
+        try:
+            import io
+            from gtts import gTTS
+            tts = gTTS(text=clean_text[:500], lang=lang)
+            fp = io.BytesIO()
+            tts.write_to_fp(fp)
+            fp.seek(0)
+            data = fp.read()
+            if len(data) > 0:
+                logger.info("gtts_complete", lang=lang, audio_bytes=len(data))
+                return data
+        except Exception as e:
+            logger.warning("gtts_fallback_failed_using_httpx", error=str(e))
+
+        import httpx
+        from urllib.parse import quote
         url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl={lang}&client=tw-ob&q={quote(clean_text[:200])}"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"

@@ -49,9 +49,11 @@ aiohttp==3.11.10
 pypdf==5.1.0
 python-docx==1.1.2
 
-# Audio Processing
+# Audio Processing & TTS Synthesis
 soundfile==0.12.1
 numpy==2.2.0
+edge-tts==6.1.15
+gTTS==2.5.4
 
 # Utilities
 tenacity==9.0.0
