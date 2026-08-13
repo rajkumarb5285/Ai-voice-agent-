@@ -18,8 +18,9 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
     cors_origins: List[str] = ["http://localhost:3000"]
 
-    # LLM
+    # LLM & Agent
     openai_api_key: str = ""
+    agent_api_key: str = ""
     openai_base_url: str = ""
     llm_model: str = "gpt-4o-mini"        # Fast + cheap; use gpt-4o for higher quality
     llm_temperature: float = 0.7
